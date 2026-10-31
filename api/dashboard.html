@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sistema inteligente de monitoreo</title>
+    <style>
+        :root {
+            --bg: #090812;
+            --surface: #121021;
+            --surface-2: #17132a;
+            --surface-3: #211b3b;
+            --line: #312652;
+            --text: #f2f0fa;
+            --muted: #a7a2bc;
+            --cyan: #00e5e9;
+            --green: #00d69b;
+            --amber: #ffbf00;
+            --pink: #ff2570;
+            --violet: #8e6fff;
+            --font: 'Roboto', 'Segoe UI', Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 14px;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .app-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 10px 14px 18px;
+        }
+
+        .topbar {
+            min-height: 70px;
+            padding: 9px 12px;
+            background: #100d1e;
+            border: 1px solid #17132b;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .brand {
+            margin: 0;
+            color: var(--cyan);
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: .01em;
+        }
+
+        .location {
+            margin: 9px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .clock {
+            text-align: right;
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.45;
+            min-width: 180px;
+        }
+
+        .clock span {
+            color: var(--cyan);
+        }
+
+        .clock-time {
+            display: block;
+            white-space: nowrap;
+        }
+
+        .clock-device {
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .section-label {
+            margin: 25px 0 8px;
+            color: #f5f3fb;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 276px minmax(0, 1fr);
+            gap: 22px;
+        }
+
+        .sidebar {
+            border: 3px solid var(--line);
+            /* Aumenta el grosor a 3px */
+            border-radius: 12px;
+            /* Bordes redondeados */
+            background: var(--surface);
+            padding: 24px 12px 16px;
+            min-height: 620px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav button {
+            border: none;
+            border-radius: 6px;
+            /* Esquinas suavemente redondeadas */
+            background: #1e88e5;
+            /* Color sólido azul de fondo base */
+            color: #ffffff;
+            /* Texto e íconos en blanco */
+            cursor: pointer;
+            text-align: center;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            /* Fuerza el texto a mayúsculas */
+            letter-spacing: 0.5px;
+            /* Sombra para lograr el efecto de alto relieve / elevación */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Asignar colores personalizados según el botón */
+        .nav button[data-target="dashboard-view"] {
+            background-color: #d97706;
+        }
+
+        /* Naranja */
+        .nav button[data-target="gabor-view"] {
+            background-color: #2563eb;
+        }
+
+        /* Azul */
+        .nav button[data-target="model-view"] {
+            background-color: #059669;
+        }
+
+        /* Verde */
+        .nav button[data-target="wav-view"] {
+            background-color: #7c3aed;
+        }
+
+        /* Púrpura */
+        .nav button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.25);
+            background: #2196f3;
+        }
+
+        /* Botón activo (Estado seleccionado) - Estilo resaltado */
+        .nav button.active {
+            background: #00b0ff;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 176, 255, 0.4);
+            transform: translateY(0);
+        }
+
+        /* Efecto al presionar (Click) */
+        .nav button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav button::first-letter {
+            color: inherit;
+        }
+
+        .network {
+            margin-top: auto;
+            padding: 18px 10px 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.25;
+        }
+
+        .network-title {
+            margin: 0 0 12px;
+            color: var(--amber);
+            font-size: 12px;
+        }
+
+        .workspace {
+            min-width: 0;
+        }
+
+        .workspace.single-view {
+            min-height: calc(100vh - 150px);
+        }
+
+        .workspace.single-view>.charts,
+        .workspace.single-view>.bottom-grid {
+            display: block;
+            margin-top: 0;
+        }
+
+        .workspace.single-view>.charts>section,
+        .workspace.single-view>.bottom-grid>section {
+            width: 100%;
+        }
+
+        .workspace.single-view .panel-title {
+            font-size: clamp(16px, 1.5vw, 22px);
+            margin-bottom: 14px;
+        }
+
+        .workspace.single-view .chart-frame {
+            height: min(70vh, 680px);
+            min-height: 420px;
+        }
+
+        .workspace.single-view .waveform {
+            height: min(35vh, 300px);
+        }
+
+        .workspace.single-view .events {
+            min-height: 360px;
+        }
+
+        .workspace.single-view table {
+            font-size: 13px;
+        }
+
+        .workspace.single-view th,
+        .workspace.single-view td {
+            padding: 16px 14px;
+        }
+
+        .workspace.single-view .module-panel {
+            margin-top: 0;
+            min-height: 360px;
+            padding: 24px;
+        }
+
+        .workspace.single-view .module-panel h2 {
+            font-size: clamp(16px, 1.5vw, 22px);
+        }
+
+        .module-panel {
+            border: 3px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .module-panel[hidden] {
+            display: none;
+        }
+
+        .view-section[hidden] {
+            display: none;
+        }
+
+        .module-panel h2 {
+            margin: 0 0 14px;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .config-item {
+            border: 1px solid var(--line);
+            padding: 10px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .config-item strong {
+            display: block;
+            color: var(--cyan);
+            font-size: 12px;
+            margin-bottom: 7px;
+        }
+
+        .config-item input,
+        .config-item select {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: var(--bg);
+            color: var(--text);
+            padding: 6px;
+            margin-top: 5px;
+        }
+
+        .config-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .config-actions button {
+            border: 1px solid var(--green);
+            background: var(--surface-3);
+            color: var(--green);
+            padding: 7px 11px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .config-message {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 84px;
+            margin-bottom: 24px;
+        }
+
+        .metric {
+            border: 3px solid var(--line);
+            /* Bordes más gruesos */
+            border-radius: 12px;
+            /* Bordes redondeados */
+            background: var(--surface);
+            min-height: 144px;
+            padding: 15px 18px 12px;
+            text-align: center;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .metric-value {
+            margin: 17px 0 18px;
+            color: var(--amber);
+            font-size: 31px;
+            line-height: 1;
+        }
+
+        .metric-value.cyan {
+            color: var(--cyan);
+        }
+
+        .metric-value.pink {
+            color: var(--pink);
+        }
+
+        .metric-note {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .alert {
+            display: inline-block;
+            border: 2px solid var(--amber);
+            border-radius: 6px;
+            /* Redondeado suave para la etiqueta interna */
+            color: var(--amber);
+            padding: 3px 8px;
+            font-size: 11px;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+        }
+
+        .panel-title {
+            margin: 0 0 8px;
+            font-size: 14px;
+            font-weight: 400;
+            color: #f6f4fb;
+        }
+
+        .chart-frame {
+            height: 214px;
+            border: 3px solid var(--line);
+            border-radius: 12px;
+            background: #100d1c;
+            position: relative;
+            overflow: hidden;
+            /* Mantiene la gráfica dentro de los bordes redondeados */
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+            margin-top: 22px;
+        }
+
+        .audio-panel {
+            min-height: 180px;
+        }
+
+        .audio-meta {
+            margin: 25px 0 8px 10px;
+            font-size: 11px;
+        }
+
+        .audio-meta strong {
+            color: #fff;
+            font-weight: 400;
+        }
+
+        .waveform {
+            height: 92px;
+        }
+
+        .audio-controls {
+            margin: 4px 0 0 10px;
+            color: var(--green);
+            font-size: 11px;
+        }
+
+        .audio-controls button {
+            border: 1px solid var(--green);
+            background: var(--surface-3);
+            color: var(--green);
+            padding: 5px 9px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .audio-controls button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .audio-progress {
+            color: var(--muted);
+            margin-left: 8px;
+        }
+
+        .events {
+            border: 2px solid var(--line);
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 10px;
+        }
+
+        th,
+        td {
+            padding: 10px 9px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--cyan);
+            font-weight: 500;
+        }
+
+        td {
+            border-top: 1px solid #28213e;
+            color: #f2f0fa;
+        }
+
+        td:nth-child(4) {
+            color: var(--green);
+        }
+
+        .danger-text {
+            color: var(--pink) !important;
+        }
+
+        .upload-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .upload-row input {
+            min-width: 0;
+            flex: 1;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .upload-row button {
+            border: none;
+            border-radius: 6px;
+            /* Bordes redondeados */
+            background: #00e5e9;
+            /* Fondo relleno con color cian brillante */
+            color: #090812;
+            /* Texto oscuro para alto contraste y legibilidad */
+            font-weight: 700;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+
+            /* Sombra de relieve tipo Material Design */
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Efecto al presionar el botón */
+        .upload-row button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+            .upload-row button:disabled {
+                opacity: .6;
+                cursor: wait;
+                transform: none;
+                box-shadow: none;
+            }
+
+            /* Efecto de resalte y elevación al pasar el mouse */
+            .upload-row button:hover {
+                background: #33eff2;
+                /* Color más brillante al pasar el cursor */
+                transform: translateY(-2px);
+                /* Eleva ligeramente el botón */
+                box-shadow: 0 6px 14px rgba(0, 229, 233, 0.4);
+                /* Resplandor brillante cian */
+            }
+
+            .result {
+                display: none;
+                color: var(--muted);
+                font-size: 11px;
+                margin-top: 8px;
+            }
+
+            .result.visible {
+                display: block;
+            }
+
+            @media (max-width: 980px) {
+
+                .metrics,
+                .charts,
+                .bottom-grid {
+                    gap: 18px;
+                }
+
+                .metrics {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .layout {
+                    grid-template-columns: 220px minmax(0, 1fr);
+                }
+            }
+
+            @media (max-width: 720px) {
+                .topbar {
+                    align-items: flex-start;
+                    flex-direction: column;
+                }
+
+                .clock {
+                    text-align: left;
+                }
+
+                .layout,
+                .metrics,
+                .charts,
+                .bottom-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .sidebar {
+                    min-height: auto;
+                    padding-top: 14px;
+                }
+
+                .network {
+                    margin-top: 25px;
+                }
+
+                .charts,
+                .bottom-grid {
+                    gap: 22px;
+                }
+
+                .chart-frame {
+                    height: 230px;
+                }
+
+                .metrics {
+                    gap: 12px;
+                }
+            }
+    </style>
+</head>
+
+<body>
+    <main class="app-shell">
+        <header class="topbar">
+            <div>
+                <h1 class="brand">SISTEMA INTELIGENTE DE MONITOREO Y PREDICCIÓN DE ESTRÉS ACÚSTICO (CNN-TRANSFORMER)
+                </h1>
+                <p class="location"> Ubicación: Av. Separadora Industrial, Ate - Lima | Dispositivo Edge: Jetson-01 |
+                    Estado: <span id="device-status">ONLINE</span> </p>
+            </div>
+            <div class="clock"><span class="clock-time" id="clock-time" aria-live="polite">Cargando hora...</span><span
+                    class="clock-device">Dispositivo: Admin_Ate · <span id="timezone"></span></span></div>
+        </header>
+
+        <p class="section-label">Navegación / Control</p>
+        <div class="layout">
+            <aside class="sidebar">
+                <nav class="nav" aria-label="Navegación principal">
+                    <button class="active" type="button" data-target="dashboard-view"> &nbsp;Dashboard
+                        Principal</button>
+                    <button type="button" data-target="gabor-view"> &nbsp;Espectrogramas Gabor</button>
+                    <button type="button" data-target="model-view"> &nbsp;Modelo CNN-Transformer</button>
+                    <button type="button" data-target="wav-view"> &nbsp;Reproductor .WAV</button>
+                    <button type="button" data-target="history-view"> &nbsp;Histórico &amp; Reportes</button>
+                    <button type="button" data-target="config-view"> &nbsp;Configuración Edge</button>
+                </nav>
+                <div class="network">
+                    <p class="network-title">INFORMACIÓN DE RED</p>
+                    <div>• Dataset: MINAM / Ate 2026<br />• Muestras: 22,342 .wav<br />• Latencia: 14 ms<br />•
+                        Precisión F1: 0.94</div>
+                </div>
+            </aside>
+
+            <section class="workspace" id="dashboard-view" aria-label="Dashboard principal">
+                <div class="metrics view-section" id="dashboard-metrics">
+                    <article class="metric">
+                        <div class="metric-label">ÍNDICE ESTRÉS ACÚSTICO (IEA)</div>
+                        <div class="metric-value" id="metric">0.803</div>
+                        <div class="alert">⚠ RANGO: ALERTA (0.65 - 1.00)</div>
+                    </article>
+                    <article class="metric">
+                        <div class="metric-label">NIVEL EQUIV. (LAeq) <span style="margin-left:70px">PICO TRANSITORIO
+                                (LAFmax)</span></div>
+                        <div><span class="metric-value cyan" id="laeq">78.4 dB</span><span class="metric-value pink"
+                                id="lafmax" style="margin-left:65px">88.2 dB</span></div>
+                        <div><span class="metric-note">ECA Zona: 80 dB</span><span class="metric-note"
+                                style="margin-left:110px;color:var(--pink)">Ruido No Estacionario</span></div>
+                    </article>
+                </div>
+                <div class="charts view-section" id="dashboard-charts">
+                    <section class="view-section" id="gabor-view" hidden>
+                        <h2 class="panel-title">1. Espectrograma de Gabor - Entrada CNN 2D</h2>
+                        <div class="chart-frame"><canvas id="spectrogram" width="700" height="300"></canvas></div>
+                    </section>
+                    <section class="view-section" id="model-view" hidden>
+                        <h2 class="panel-title">2. Predicción de IEA a 15 Min - Módulo Transformer</h2>
+                        <div class="chart-frame"><canvas id="prediction" width="700" height="300"></canvas></div>
+                    </section>
+                </div>
+                <div class="bottom-grid view-section" id="dashboard-bottom">
+                    <section class="audio-panel view-section" id="wav-view" hidden>
+                        <h2 class="panel-title">3. Reproductor y Analizador de Audio (.WAV)</h2>
+                        <div class="audio-meta">▣ Muestra: <strong id="file-name">AUD_ATE_2026_089.wav</strong>
+                            (Duración: 00:30s | SR: 44.1 kHz)</div><canvas class="waveform" id="waveform" width="700"
+                            height="150"></canvas>
+                        <div class="audio-controls">
+                            <button id="play-audio" type="button">▶ PLAY</button>
+                            <button id="pause-audio" type="button" disabled>❚❚ PAUSE</button>
+                            <button id="stop-audio" type="button" disabled>■ STOP</button>
+                            <span class="audio-progress" id="audio-progress">00:00 / 00:00</span>
+                            <audio id="audio-player" preload="metadata"></audio>
+                        </div>
+                        <div class="upload-row"><input id="audio" type="file" accept=".wav,audio/wav" /><button
+                                id="submit" type="button">EJECUTAR PREDICCIÓN</button></div>
+                        <div class="result" id="result">Esperando análisis...</div>
+                    </section>
+                    <section class="view-section" id="recent-events-view">
+                        <h2 class="panel-title">4. Últimos 5 eventos detectados</h2>
+                        <div class="events">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Hora</th>
+                                        <th>Fuente Detectada</th>
+                                        <th>LAFmax</th>
+                                        <th>IEA</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-event-rows"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <section class="view-section" id="history-view" hidden>
+                        <h2 class="panel-title">Eventos Detectados y Clasificación de Fuente - Registro completo</h2>
+                        <div class="events">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Hora</th>
+                                        <th>Fuente Detectada</th>
+                                        <th>LAFmax</th>
+                                        <th>IEA</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="event-rows">
+                                    <tr>
+                                        <td>10:45:12</td>
+                                        <td>Tránsito Pesado</td>
+                                        <td>88.2 dB</td>
+                                        <td>0.82</td>
+                                        <td class="danger-text">Alerta Fiscal</td>
+                                    </tr>
+                                    <tr>
+                                        <td>10:41:05</td>
+                                        <td>Bocina / Claxon</td>
+                                        <td>85.6 dB</td>
+                                        <td>0.78</td>
+                                        <td>Registrado</td>
+                                    </tr>
+                                    <tr>
+                                        <td>10:38:22</td>
+                                        <td>Maquinaria Ind.</td>
+                                        <td>74.1 dB</td>
+                                        <td>0.59</td>
+                                        <td>Normal</td>
+                                    </tr>
+                                    <tr>
+                                        <td>10:30:00</td>
+                                        <td>Frenado Brusco</td>
+                                        <td>62.9 dB</td>
+                                        <td>0.71</td>
+                                        <td>Registrado</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                <section class="module-panel view-section" id="config-view" hidden>
+                    <h2>Configuración del dispositivo Edge</h2>
+                    <div class="config-grid">
+                        <label class="config-item"><strong>Dispositivo</strong><input id="device-name"
+                                value="Jetson-01" /></label>
+                        <label class="config-item"><strong>Intervalo de monitoreo</strong><select id="monitor-interval">
+                                <option>15 minutos</option>
+                                <option>30 minutos</option>
+                                <option>60 minutos</option>
+                            </select></label>
+                        <label class="config-item"><strong>Umbral de alerta IEA</strong><input id="alert-threshold"
+                                type="number" min="0" max="1" step="0.01" value="0.65" /></label>
+                    </div>
+                    <div class="config-actions"><button id="save-config" type="button">APLICAR
+                            CONFIGURACIÓN</button><span class="config-message" id="config-message">Cambios
+                            pendientes</span></div>
+                </section>
+            </section>
+        </div>
+    </main>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        function grid(ctx, width, height) { ctx.strokeStyle = 'rgba(112,91,161,.22)'; ctx.lineWidth = 1; for (let x = 0; x <= width; x += width / 8) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke(); } for (let y = 0; y <= height; y += height / 6) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); } }
+        function drawSpectrogram() { const canvas = $('spectrogram'), ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height; const image = ctx.createImageData(w, h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const band = Math.exp(-Math.pow((y - h * .42) / 25, 2)) * Math.exp(-Math.pow((x - w * .55) / 170, 2)); const noise = Math.random() * 38; const value = Math.min(255, 25 + noise + band * 220); image.data[(y * w + x) * 4] = value * .55 + 65; image.data[(y * w + x) * 4 + 1] = value * .15; image.data[(y * w + x) * 4 + 2] = value * .9; image.data[(y * w + x) * 4 + 3] = 255; } ctx.putImageData(image, 0, 0); ctx.fillStyle = 'rgba(255,185,93,.9)'; ctx.fillRect(w * .28, h * .52, 75, 47); ctx.fillRect(w * .63, h * .23, 70, 47); grid(ctx, w, h); }
+        function drawPrediction() { const canvas = $('prediction'), ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height; ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#100d1c'; ctx.fillRect(0, 0, w, h); grid(ctx, w, h); const points = [0.64, .73, .86, .78, .62, .48, .35, .5, .72, .69, .91, .77, .57, .52, .49, .55, .75, .68, .61]; const plotTop = 18, plotBottom = h - 26, plotHeight = plotBottom - plotTop; const valueY = (value) => plotBottom - value * plotHeight; ctx.fillStyle = '#a7a2bc'; ctx.font = '12px Segoe UI';[0.3, 0.5, 0.7, 0.9, 1.1].forEach((value) => { const y = valueY(value); ctx.fillText(value.toFixed(1), 6, y + 4); });[0, 5, 10, 15].forEach((minute) => { const x = 36 + minute * (w - 48) / 15; ctx.fillText(`${minute}m`, x - 8, h - 8); }); const line = (color, offset, dash) => { ctx.beginPath(); points.forEach((v, i) => { const x = 36 + i * (w - 48) / (points.length - 1), y = valueY(v + offset * Math.sin(i)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.setLineDash(dash ? [8, 7] : []); ctx.stroke(); ctx.setLineDash([]); }; ctx.strokeStyle = 'rgba(255,37,112,.75)'; ctx.setLineDash([4, 5]);[0.65, 1].forEach(v => { const y = valueY(v); ctx.beginPath(); ctx.moveTo(36, y); ctx.lineTo(w, y); ctx.stroke(); }); ctx.setLineDash([]); line('#00e5e9', 0, false); line('#ff2570', 0.015, true); ctx.fillStyle = '#00e5e9'; ctx.font = '11px Segoe UI'; ctx.fillText(`Actual: ${points[points.length - 1].toFixed(2)}`, w - 105, 16); }
+        let waveformSamples = [];
+        function drawWaveform(progress = 0) {
+            const canvas = $('waveform'), ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#100d1c';
+            ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = 'rgba(112,91,161,.3)';
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2);
+            ctx.lineTo(w, h / 2);
+            ctx.stroke();
+            const samples = waveformSamples.length ? waveformSamples : Array.from({ length: w }, (_, index) => Math.sin(index * .19) * .45);
+            ctx.beginPath();
+            samples.forEach((amplitude, index) => {
+                const x = index * w / Math.max(samples.length - 1, 1);
+                const y = h / 2 - amplitude * (h * .43);
+                index ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            });
+            ctx.strokeStyle = '#00e5e9';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            if (progress > 0) {
+                const x = Math.min(progress, 1) * w;
+                ctx.fillStyle = 'rgba(0,229,233,.13)';
+                ctx.fillRect(0, 0, x, h);
+                ctx.strokeStyle = '#ffbf00';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+        }
+        async function loadWaveform(file) {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const buffer = await context.decodeAudioData(await file.arrayBuffer());
+            const channel = buffer.getChannelData(0);
+            const bucketSize = Math.max(1, Math.floor(channel.length / 700));
+            waveformSamples = Array.from({ length: 700 }, (_, index) => {
+                const start = index * bucketSize;
+                const end = Math.min(start + bucketSize, channel.length);
+                let peak = 0;
+                for (let cursor = start; cursor < end; cursor++) peak = Math.max(peak, Math.abs(channel[cursor]));
+                return peak;
+            });
+            drawWaveform(0);
+            await context.close();
+        }
+        function updateClock() {
+            const now = new Date();
+            const date = now.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            $('clock-time').textContent = `${date} - ${time}`;
+            $('timezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        }
+        function classifyStress(value) {
+            if (value >= 0.75) return { action: 'Alerta IEA', className: 'danger-text' };
+            if (value >= 0.65) return { action: 'Alerta preventiva', className: 'danger-text' };
+            return { action: 'Registrado', className: '' };
+        }
+        function addEventRow(event, save = true) {
+            const row = document.createElement('tr');
+            const stress = classifyStress(event.iea);
+            [event.time, event.source, event.lafmax, Number(event.iea).toFixed(2), stress.action].forEach((value, index) => {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                if (index === 4 && stress.className) cell.className = stress.className;
+                row.appendChild(cell);
+            });
+            $('event-rows').prepend(row);
+            if (save) {
+                const savedEvents = JSON.parse(localStorage.getItem('acoustic-events') || '[]');
+                savedEvents.unshift(event);
+                localStorage.setItem('acoustic-events', JSON.stringify(savedEvents.slice(0, 25)));
+            }
+            refreshRecentEvents();
+        }
+        function refreshRecentEvents() {
+            const recentRows = $('recent-event-rows');
+            const allRows = Array.from($('event-rows').querySelectorAll('tr'));
+            recentRows.replaceChildren(...allRows.slice(0, 5).map((row) => row.cloneNode(true)));
+        }
+        function loadSavedEvents() {
+            const savedEvents = JSON.parse(localStorage.getItem('acoustic-events') || '[]');
+            savedEvents.reverse().forEach((event) => addEventRow(event, false));
+            refreshRecentEvents();
+        }
+        function activateView(targetId, updateHash = true) {
+            const target = $(targetId);
+            if (!target) return;
+            const workspace = document.querySelector('.workspace');
+            workspace.classList.toggle('single-view', targetId !== 'dashboard-view');
+            document.querySelectorAll('.workspace .view-section').forEach((section) => section.hidden = true);
+            if (targetId === 'dashboard-view') {
+                document.querySelectorAll('.workspace .view-section').forEach((section) => section.hidden = false);
+                $('config-view').hidden = true;
+                $('history-view').hidden = true;
+                $('recent-events-view').hidden = false;
+            } else {
+                target.hidden = false;
+                let parent = target.parentElement;
+                while (parent && parent.id !== 'dashboard-view') {
+                    if (parent.classList.contains('view-section')) parent.hidden = false;
+                    parent = parent.parentElement;
+                }
+            }
+            document.querySelectorAll('.nav button').forEach((button) => button.classList.toggle('active', button.dataset.target === targetId));
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (updateHash) history.replaceState(null, '', `#${targetId}`);
+        }
+        document.querySelectorAll('.nav button').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.target)));
+        $('save-config').addEventListener('click', () => {
+            const threshold = Number($('alert-threshold').value);
+            const message = $('config-message');
+            if (threshold < 0 || threshold > 1) {
+                message.textContent = 'El umbral debe estar entre 0 y 1.';
+                message.style.color = 'var(--pink)';
+                return;
+            }
+            message.textContent = `Configuración aplicada a ${$('device-name').value} · alerta desde ${threshold.toFixed(2)}`;
+            message.style.color = 'var(--green)';
+        });
+        async function loadDashboard() { try { const health = await fetch('/health').then(r => r.json()); $('device-status').textContent = health.model_available ? 'ONLINE' : 'MODELO NO LISTO'; const data = await fetch('/dashboard-data').then(r => r.json()); $('metric').textContent = Number(data.current_stress || .803).toFixed(3); } catch (error) { $('device-status').textContent = 'SIN CONEXIÓN'; } }
+        let audioObjectUrl = null;
+        const audioPlayer = $('audio-player');
+        let audioContext = null;
+        let analyser = null;
+        let audioSource = null;
+        let liveWaveAnimation = null;
+        function setupAudioAnalyser() {
+            if (audioContext) return;
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 1024;
+            audioSource = audioContext.createMediaElementSource(audioPlayer);
+            audioSource.connect(analyser);
+            analyser.connect(audioContext.destination);
+        }
+        function drawLiveWaveform() {
+            if (!analyser) return;
+            const data = new Uint8Array(analyser.fftSize);
+            analyser.getByteTimeDomainData(data);
+            const canvas = $('waveform'), ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#100d1c';
+            ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = 'rgba(112,91,161,.35)';
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2);
+            ctx.lineTo(w, h / 2);
+            ctx.stroke();
+            ctx.beginPath();
+            data.forEach((value, index) => {
+                const x = index * w / (data.length - 1);
+                const y = h / 2 + ((value - 128) / 128) * (h * .43);
+                index ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+            });
+            ctx.strokeStyle = '#00e5e9';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            if (!audioPlayer.paused && !audioPlayer.ended) liveWaveAnimation = requestAnimationFrame(drawLiveWaveform);
+        }
+        const formatTime = (seconds) => { if (!Number.isFinite(seconds)) return '00:00'; const minutes = Math.floor(seconds / 60).toString().padStart(2, '0'); const remainder = Math.floor(seconds % 60).toString().padStart(2, '0'); return `${minutes}:${remainder}`; };
+        const updateAudioProgress = () => { $('audio-progress').textContent = `${formatTime(audioPlayer.currentTime)} / ${formatTime(audioPlayer.duration)}`; drawWaveform(audioPlayer.duration ? audioPlayer.currentTime / audioPlayer.duration : 0); };
+        const showAudioMessage = (message) => { $('result').textContent = message; $('result').classList.add('visible'); };
+        $('audio').addEventListener('change', async (event) => { const file = event.target.files[0]; if (!file) return; if (audioObjectUrl) URL.revokeObjectURL(audioObjectUrl); audioObjectUrl = URL.createObjectURL(file); audioPlayer.src = audioObjectUrl; audioPlayer.load(); $('file-name').textContent = file.name; $('play-audio').disabled = false; $('stop-audio').disabled = false; waveformSamples = []; drawWaveform(0); showAudioMessage('Cargando forma de onda...'); try { await loadWaveform(file); showAudioMessage('Audio listo para reproducir.'); } catch (error) { showAudioMessage('Audio listo; no se pudo dibujar la forma de onda real.'); } });
+        audioPlayer.addEventListener('loadedmetadata', updateAudioProgress);
+        audioPlayer.addEventListener('timeupdate', updateAudioProgress);
+        audioPlayer.addEventListener('play', () => { $('pause-audio').disabled = false; $('stop-audio').disabled = false; });
+        audioPlayer.addEventListener('pause', () => { $('pause-audio').disabled = true; cancelAnimationFrame(liveWaveAnimation); });
+        audioPlayer.addEventListener('ended', () => { $('pause-audio').disabled = true; $('play-audio').disabled = false; });
+        $('play-audio').addEventListener('click', async () => { if (!audioPlayer.src) { showAudioMessage('Selecciona un archivo .wav primero.'); return; } try { setupAudioAnalyser(); await audioContext.resume(); await audioPlayer.play(); cancelAnimationFrame(liveWaveAnimation); drawLiveWaveform(); showAudioMessage('Reproduciendo audio.'); } catch (error) { showAudioMessage('El navegador no pudo reproducir este audio.'); } });
+        $('pause-audio').addEventListener('click', () => { audioPlayer.pause(); showAudioMessage('Audio pausado.'); });
+        $('stop-audio').addEventListener('click', () => { audioPlayer.pause(); cancelAnimationFrame(liveWaveAnimation); audioPlayer.currentTime = 0; updateAudioProgress(); $('pause-audio').disabled = true; showAudioMessage('Audio detenido.'); });
+        $('submit').addEventListener('click', async () => { const file = $('audio').files[0], result = $('result'); if (!file) { result.textContent = 'Selecciona un archivo .wav primero.'; result.classList.add('visible'); return; } const button = $('submit'); button.disabled = true; audioPlayer.pause(); cancelAnimationFrame(liveWaveAnimation); audioPlayer.currentTime = 0; drawWaveform(0); result.textContent = ''; result.classList.remove('visible'); const form = new FormData(); form.append('file', file); try { const response = await fetch('/predict', { method: 'POST', body: form }); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'No se pudo procesar'); const stress = Number(data.stress_index); const laeq = Number(data.laeq); const lafmax = Number(data.lafmax); result.textContent = `Predicción IEA: ${stress.toFixed(3)}`; result.classList.add('visible'); $('metric').textContent = stress.toFixed(3); $('laeq').textContent = `${laeq.toFixed(1)} dB`; $('lafmax').textContent = `${lafmax.toFixed(1)} dB`; addEventRow({ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), source: `Audio analizado: ${file.name}`, lafmax: `${lafmax.toFixed(1)} dB`, iea: stress }); } catch (error) { result.textContent = error.message; result.classList.add('visible'); } finally { button.disabled = false; } });
+        updateClock(); setInterval(updateClock, 1000);
+        loadSavedEvents();
+        drawSpectrogram(); drawPrediction(); drawWaveform(); loadDashboard();
+        const initialView = window.location.hash.slice(1);
+        activateView(initialView && $(initialView) ? initialView : 'dashboard-view', false);
+    </script>
+</body>
+
+</html>

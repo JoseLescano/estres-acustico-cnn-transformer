@@ -1,0 +1,52 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.10, pytest-9.1.1, pluggy-1.6.0 -- C:\estres-acustico-cnn-transformer\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\estres-acustico-cnn-transformer
+plugins: anyio-4.15.1
+collecting ... collected 43 items
+
+tests/test_config.py::test_root_dir_exists PASSED                        [  2%]
+tests/test_config.py::test_data_subdirectories_are_defined_under_data_dir PASSED [  4%]
+tests/test_config.py::test_dataset_split_sums_to_one PASSED              [  6%]
+tests/test_config.py::test_transformer_d_model_divisible_by_heads PASSED [  9%]
+tests/test_config.py::test_device_is_valid PASSED                        [ 11%]
+tests/test_evaluate.py::test_extract_statistical_features_shape PASSED   [ 13%]
+tests/test_evaluate.py::test_extract_statistical_features_is_deterministic PASSED [ 16%]
+tests/test_evaluate.py::test_dataset_to_numpy_matches_dataset_length PASSED [ 18%]
+tests/test_evaluate.py::test_evaluate_traditional_baseline_returns_valid_metrics PASSED [ 20%]
+tests/test_gabor_spectrogram.py::test_compute_gabor_spectrogram_output_shape PASSED [ 23%]
+tests/test_gabor_spectrogram.py::test_compute_gabor_spectrogram_rejects_empty_audio PASSED [ 25%]
+tests/test_gabor_spectrogram.py::test_compute_gabor_spectrogram_rejects_non_1d_audio PASSED [ 27%]
+tests/test_gabor_spectrogram.py::test_normalize_spectrogram_has_zero_mean_unit_std PASSED [ 30%]
+tests/test_gabor_spectrogram.py::test_normalize_spectrogram_handles_constant_input PASSED [ 32%]
+tests/test_gabor_spectrogram.py::test_pad_or_trim_spectrogram_pads_when_shorter PASSED [ 34%]
+tests/test_gabor_spectrogram.py::test_pad_or_trim_spectrogram_trims_when_longer PASSED [ 37%]
+tests/test_gabor_spectrogram.py::test_pad_or_trim_spectrogram_noop_when_equal PASSED [ 39%]
+tests/test_generate_metadata_template.py::test_find_audio_files_returns_only_wav PASSED [ 41%]
+tests/test_generate_metadata_template.py::test_find_audio_files_raises_if_dir_missing PASSED [ 44%]
+tests/test_generate_metadata_template.py::test_validate_sample_rate_detects_mismatch PASSED [ 46%]
+tests/test_generate_metadata_template.py::test_validate_sample_rate_accepts_match PASSED [ 48%]
+tests/test_generate_metadata_template.py::test_generate_metadata_template_creates_csv_with_empty_labels PASSED [ 51%]
+tests/test_generate_metadata_template.py::test_generate_metadata_template_preserves_existing_labels PASSED [ 53%]
+tests/test_generate_metadata_template.py::test_generate_metadata_template_overwrite_resets_labels PASSED [ 55%]
+tests/test_hybrid_model.py::test_cnn_extractor_output_channels_match_config PASSED [ 58%]
+tests/test_hybrid_model.py::test_cnn_extractor_rejects_invalid_channel_config PASSED [ 60%]
+tests/test_hybrid_model.py::test_positional_encoding_preserves_shape PASSED [ 62%]
+tests/test_hybrid_model.py::test_transformer_block_preserves_shape PASSED [ 65%]
+tests/test_hybrid_model.py::test_transformer_block_rejects_incompatible_heads PASSED [ 67%]
+tests/test_hybrid_model.py::test_hybrid_model_end_to_end_forward PASSED  [ 69%]
+tests/test_hybrid_model.py::test_hybrid_model_rejects_wrong_input_dims PASSED [ 72%]
+tests/test_metrics.py::test_perfect_prediction_gives_zero_error PASSED   [ 74%]
+tests/test_metrics.py::test_perfect_prediction_gives_r2_of_one PASSED    [ 76%]
+tests/test_metrics.py::test_r2_handles_constant_target PASSED            [ 79%]
+tests/test_metrics.py::test_rmse_is_sqrt_of_mse PASSED                   [ 81%]
+tests/test_metrics.py::test_f1_score_perfect_classification PASSED       [ 83%]
+tests/test_metrics.py::test_f1_score_worst_case_is_zero PASSED           [ 86%]
+tests/test_metrics.py::test_compute_all_metrics_returns_all_fields PASSED [ 88%]
+tests/test_train.py::test_warmup_materializes_lazy_linear_parameters PASSED [ 90%]
+tests/test_train.py::test_run_epoch_training_updates_weights PASSED      [ 93%]
+tests/test_train.py::test_run_epoch_eval_mode_does_not_update_weights PASSED [ 95%]
+tests/test_train.py::test_early_stopping_triggers_after_patience_exceeded PASSED [ 97%]
+tests/test_train.py::test_early_stopping_resets_on_improvement PASSED    [100%]
+
+============================= 43 passed in 12.12s =============================

@@ -1,0 +1,58 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.10, pytest-9.1.1, pluggy-1.6.0 -- C:\estres-acustico-cnn-transformer\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\estres-acustico-cnn-transformer
+plugins: anyio-4.15.1
+collecting ... collected 5 items
+
+tests/test_train.py::test_warmup_materializes_lazy_linear_parameters FAILED [ 20%]
+tests/test_train.py::test_run_epoch_training_updates_weights PASSED      [ 40%]
+tests/test_train.py::test_run_epoch_eval_mode_does_not_update_weights PASSED [ 60%]
+tests/test_train.py::test_early_stopping_triggers_after_patience_exceeded PASSED [ 80%]
+tests/test_train.py::test_early_stopping_resets_on_improvement PASSED    [100%]
+
+================================== FAILURES ===================================
+_______________ test_warmup_materializes_lazy_linear_parameters _______________
+
+    def test_warmup_materializes_lazy_linear_parameters():
+        model = HybridCNNTransformer(d_model=16)
+        model.transformer = TransformerBlock(d_model=16, n_heads=2, n_layers=1, dim_feedforward=32)
+    
+        dataset = _SyntheticSpectrogramDataset()
+        loader = DataLoader(dataset, batch_size=4)
+    
+>       params_before = sum(p.numel() for p in model.parameters())
+
+tests\test_train.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_train.py:45: in <genexpr>
+    params_before = sum(p.numel() for p in model.parameters())
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'torch.nn.parameter.UninitializedParameter'>
+func = <method 'numel' of 'torch._C.TensorBase' objects>
+types = (<class 'torch.nn.parameter.UninitializedParameter'>,)
+args = (<UninitializedParameter>,), kwargs = None
+
+    @classmethod
+    def __torch_function__(cls, func, types, args=(), kwargs=None):
+        # method-wrapper is to detect access to Tensor properties that are
+        # wrapped in descriptors
+        if func in cls._allowed_methods or func.__class__.__name__ == "method-wrapper":
+            if kwargs is None:
+                kwargs = {}
+            # pyrefly: ignore [missing-attribute]
+            return super().__torch_function__(func, types, args, kwargs)
+>       raise ValueError(
+            f"Attempted to use an uninitialized parameter in {func}. "
+            "This error happens when you are using a `LazyModule` or "
+            f"explicitly manipulating `torch.nn.parameter.{cls.__name__}` "
+            "objects. When using LazyModules Call `forward` with a dummy batch "
+            "to initialize the parameters before calling torch functions"
+        )
+E       ValueError: Attempted to use an uninitialized parameter in <method 'numel' of 'torch._C.TensorBase' objects>. This error happens when you are using a `LazyModule` or explicitly manipulating `torch.nn.parameter.UninitializedParameter` objects. When using LazyModules Call `forward` with a dummy batch to initialize the parameters before calling torch functions
+
+.venv\lib\site-packages\torch\nn\parameter.py:184: ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_train.py::test_warmup_materializes_lazy_linear_parameters - ValueError: Attempted to use an uninitialized parameter in <method 'numel' of 'torch._C.TensorBase' objects>. This error happens when you are using a `LazyModule` or explicitly manipulating `torch.nn.parameter.UninitializedParameter` objects. When using LazyModules Call `forward` with a dummy batch to initialize the parameters before calling torch functions
+======================== 1 failed, 4 passed in 20.28s =========================
